@@ -38,8 +38,8 @@ graph TD
 ## 啟動方式
 
 ```bash
-git clone https://github.com/你的帳號/vagrant-ansible-infra.git
-cd vagrant-ansible-infra
+git clone https://github.com/你的帳號/vagrant-ansible-three-node.git
+cd vagrant-ansible-three-node
 vagrant up
 vagrant ssh control
 cd ~/ansible-project
