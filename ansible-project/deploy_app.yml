@@ -1,0 +1,22 @@
+---
+- name: 在遠端網頁伺服器部署 WordPress 網站
+  hosts: webservers
+  # 這裡不用 become: true，因為我們剛才已經把 vagrant 使用者加入 docker 群組了
+
+  tasks:
+    - name: 1. 在遠端建立一個專案資料夾
+      file:
+        path: ~/wordpress-app
+        state: directory
+        mode: '0755'
+
+    - name: 2. 將本地的 docker-compose.yml 複製到遠端伺服器
+      copy:
+        src: ./docker-compose.yml
+        dest: ~/wordpress-app/docker-compose.yml
+        mode: '0644'
+
+    - name: 3. 執行 Docker Compose 啟動服務
+      shell:
+        cmd: docker compose up -d
+        chdir: ~/wordpress-app

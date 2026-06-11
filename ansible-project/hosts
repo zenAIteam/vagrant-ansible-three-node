@@ -1,0 +1,11 @@
+# 網頁伺服器組
+[webservers]
+192.168.56.11
+
+# 監控伺服器組
+[monitoring]
+192.168.56.12
+
+# 萬用群組設定：告訴 Ansible 一律使用 vagrant 這個使用者進行 SSH 連線
+[all:vars]
+ansible_user=vagrant

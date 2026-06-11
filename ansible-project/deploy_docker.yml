@@ -1,0 +1,40 @@
+---
+- name: 在網頁伺服器上自動化部署 Docker 環境
+  hosts: webservers
+  become: true  # 相當於自動切換成 root 權限執行指令
+
+  tasks:
+    - name: 1. 安裝 Docker 所需的基礎工具套件
+      dnf:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+        state: present
+
+    - name: 2. 新增 Docker 官方的軟體倉庫 (Repository)
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+        mode: '0644'
+
+    - name: 3. 正式安裝 Docker 引擎與相關組件
+      dnf:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+
+    - name: 4. 啟動 Docker 服務並設定開機自動啟動
+      systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: 5. 將 vagrant 使用者加入 docker 群組 (免 sudo 執行 docker)
+      user:
+        name: vagrant
+        groups: docker
+        append: true

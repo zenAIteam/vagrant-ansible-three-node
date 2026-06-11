@@ -1,0 +1,15 @@
+---
+- name: 在網頁伺服器上部署 Node Exporter 採集器
+  hosts: webservers
+
+  tasks:
+    - name: 1. 透過 Docker 啟動 Node Exporter 容器
+      shell:
+        cmd: |
+          docker run -d \
+            --name=node-exporter \
+            --net="host" \
+            --pid="host" \
+            -v "/:/host:ro,rslave" \
+            prom/node-exporter:latest \
+            --path.rootfs=/host

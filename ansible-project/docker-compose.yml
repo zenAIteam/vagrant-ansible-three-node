@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # 1. 資料庫容器服務
+  db:
+    image: mysql:8.0
+    container_name: wordpress_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: secret_root_password
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wp_user
+      MYSQL_PASSWORD: wp_password
+    volumes:
+      # 資料持久化：把容器內的資料庫，同步存到 Linux 本機的硬碟，防止容器重啟後資料消失
+      - db_data:/var/lib/mysql
+
+  # 2. WordPress 網頁容器服務
+  wordpress:
+    depends_on:
+      - db
+    image: wordpress:latest
+    container_name: wordpress_app
+    restart: always
+    ports:
+      # 把虛擬機的 80 Port 對接容器的 80 Port，這樣外面才連得到
+      - "80:80"
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_USER: wp_user
+      WORDPRESS_DB_PASSWORD: wp_password
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - wp_data:/var/www/html
+
+volumes:
+  db_data:
+  wp_data:

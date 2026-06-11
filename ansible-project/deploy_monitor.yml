@@ -1,0 +1,77 @@
+---
+- name: 在監控伺服器部署Prometheus與Grafana
+  hosts: monitoring
+  become: true
+
+  tasks:
+    - name: 0. 新增Docker官方的軟體倉庫(Repository)
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+        mode: '0644'
+
+    - name: 1. 確保monitor機器也安裝並啟動了Docker
+      dnf:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+
+    - name: 2. 啟動Docker服務
+      systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: 3. 建立監控專案資料夾
+      file:
+        path: /home/vagrant/monitor-center
+        state: directory
+        mode: '0755'
+
+    - name: 4. 建立Prometheus設定檔
+      copy:
+        dest: /home/vagrant/monitor-center/prometheus.yml
+        content: |
+          global:
+            scrape_interval: 5s
+
+          scrape_configs:
+            - job_name: 'prometheus'
+              static_configs:
+                - targets: ['localhost:9090']
+
+            - job_name: 'web-server'
+              static_configs:
+                - targets: ['192.168.56.11:9100']
+        mode: '0644'
+
+    - name: 5. 建立Docker Compose 監控藍圖
+      copy:
+        dest: /home/vagrant/monitor-center/docker-compose.yml
+        content: |
+          version: '3.8'
+          services:
+            prometheus:
+              image: prom/prometheus:latest
+              container_name: prometheus
+              volumes:
+                - ./prometheus.yml:/etc/prometheus/prometheus.yml
+              ports:
+                - "9090:9090"
+              restart: always
+
+            grafana:
+              image: grafana/grafana:latest
+              container_name: grafana
+              ports:
+                - "3000:3000"
+              restart: always
+        mode: '0644'
+
+    - name: 6. 啟動監控雙容器
+      shell:
+        cmd: docker compose up -d
+        chdir: /home/vagrant/monitor-center
