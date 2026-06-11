@@ -38,7 +38,7 @@ graph TD
 ## 啟動方式
 
 ```bash
-git clone https://github.com/你的帳號/vagrant-ansible-three-node.git
+git clone https://github.com/zenAIteam/vagrant-ansible-three-node.git
 cd vagrant-ansible-three-node
 vagrant up
 vagrant ssh control
