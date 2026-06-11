@@ -1,4 +1,4 @@
-# Vagrant Ansible Infra
+# Vagrant Ansible Three Node
 
 三節點自動化部署實驗環境，使用 Vagrant 建立虛擬機，Ansible 自動化部署 Docker、WordPress 與 Prometheus/Grafana 監控系統。
 
