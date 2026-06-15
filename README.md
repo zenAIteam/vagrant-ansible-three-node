@@ -7,9 +7,21 @@
 ---
 
 ## 架構圖
-
 ```mermaid
 graph TD
+    subgraph HOST["本機（VirtualBox + Vagrant）"]
+        CN["control-node<br/>192.168.56.10<br/>ansible-core"]
+        WS["web-server<br/>192.168.56.11<br/>Docker<br/>WordPress:80<br/>Node Exporter:9100"]
+        MS["monitor-server<br/>192.168.56.12<br/>Prometheus:9090<br/>Grafana:3000"]
+    end
+
+    CN -- "ansible-playbook" --> WS
+    CN -- "ansible-playbook" --> MS
+    WS -- "抓取 :9100" --> MS
+```
+
+
+```
 ┌─────────────────────────────────────────────────────────────────┐
 │                  本機（VirtualBox + Vagrant）                    │
 │                                                                 │
