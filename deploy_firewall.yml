@@ -1,0 +1,120 @@
+---
+- name: 強化 control-node 防火牆規則
+  hosts: control
+  become: true
+
+  tasks:
+    - name: 確認 firewalld 已啟動並設為開機自啟
+      systemd:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: 允許 SSH（22/tcp）— any source
+      ansible.posix.firewalld:
+        service: ssh
+        permanent: yes
+        immediate: yes
+        state: enabled
+
+    - name: 移除 dhcpv6-client（Rocky 9 預設開放，不需要）
+      ansible.posix.firewalld:
+        service: dhcpv6-client
+        permanent: yes
+        immediate: yes
+        state: disabled
+      ignore_errors: yes
+
+- name: 強化 web-server 防火牆規則
+  hosts: webservers
+  become: true
+
+  tasks:
+    - name: 確認 firewalld 已啟動並設為開機自啟
+      systemd:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: 允許 SSH（22/tcp）— any source
+      ansible.posix.firewalld:
+        service: ssh
+        permanent: yes
+        immediate: yes
+        state: enabled
+
+    - name: 允許 HTTP（80/tcp）— any source
+      ansible.posix.firewalld:
+        service: http
+        permanent: yes
+        immediate: yes
+        state: enabled
+
+    - name: 移除 dhcpv6-client
+      ansible.posix.firewalld:
+        service: dhcpv6-client
+        permanent: yes
+        immediate: yes
+        state: disabled
+      ignore_errors: yes
+
+    - name: 只允許 monitor-server 存取 Node Exporter（9100/tcp）
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" source address="192.168.56.12" port port="9100" protocol="tcp" accept'
+        permanent: yes
+        immediate: yes
+        state: enabled
+
+- name: 強化 monitor-server 防火牆規則
+  hosts: monitoring
+  become: true
+
+  tasks:
+    - name: 確認 firewalld 已啟動並設為開機自啟
+      systemd:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: 允許 SSH（22/tcp）— any source
+      ansible.posix.firewalld:
+        service: ssh
+        permanent: yes
+        immediate: yes
+        state: enabled
+
+    - name: 移除 dhcpv6-client
+      ansible.posix.firewalld:
+        service: dhcpv6-client
+        permanent: yes
+        immediate: yes
+        state: disabled
+      ignore_errors: yes
+
+    - name: 允許 Prometheus（9090/tcp）— any source
+      ansible.posix.firewalld:
+        port: 9090/tcp
+        permanent: yes
+        immediate: yes
+        state: enabled
+
+    - name: 允許 Grafana（3000/tcp）— any source
+      ansible.posix.firewalld:
+        port: 3000/tcp
+        permanent: yes
+        immediate: yes
+        state: enabled
+
+- name: 驗證防火牆規則套用結果
+  hosts: all
+  become: true
+
+  tasks:
+    - name: 列出各節點目前生效的防火牆規則
+      shell: firewall-cmd --list-all
+      register: fw_result
+      changed_when: false
+
+    - name: 輸出規則內容
+      debug:
+        var: fw_result.stdout_lines
