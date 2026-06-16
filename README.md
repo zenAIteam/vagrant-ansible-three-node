@@ -116,7 +116,7 @@ Rocky Linux 9 預設啟用 `firewalld`。任何監聽在非標準埠（如 Node 
 
 ---
 
-## Phase 2 — 防火牆強化（Firewall Hardening）
+## 防火牆強化（Firewall Hardening）
 
 ### 設計目標
 
@@ -384,7 +384,7 @@ vagrant-ansible-three-node/
 │   ├── deploy_app.yml             # 以 Compose 部署 WordPress
 │   ├── deploy_monitor.yml         # 部署 Prometheus + Grafana
 │   ├── deploy_exporter.yml        # 部署 Node Exporter
-│   └── deploy_firewall.yml        # 強化各節點防火牆規則（Phase 2）
+│   └── deploy_firewall.yml        # 強化各節點防火牆規則
 └── vagrant-test/                  # 實驗用暫存目錄
 ```
 
