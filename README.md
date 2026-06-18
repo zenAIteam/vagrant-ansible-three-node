@@ -94,6 +94,39 @@ ansible-playbook deploy_firewall.yml     # 強化各節點防火牆規則（Phas
 
 ---
 
+## 監控系統設定指南
+
+### 驗證服務是否正常啟動
+
+**Prometheus：** 開啟 `http://192.168.56.12:9090`，若看到黑白灰底、有 Graph 分頁的介面，代表 Prometheus 正常運作。
+
+**Grafana：** 開啟 `http://192.168.56.12:3000`，若看到 Grafana 登入畫面，代表成功。預設帳號 `admin` / 密碼 `admin`，第一次登入會提示修改密碼，可直接點 Skip 跳過。
+
+### 步驟一：新增 Prometheus 資料源
+
+1. 點擊左側選單 **Connections → Data sources**
+2. 點擊 **Add data source**，選擇 **Prometheus**
+3. 在 **Prometheus server URL** 欄位輸入：
+   ```
+   http://prometheus:9090
+   ```
+   （Prometheus 與 Grafana 部署在同一台機器上，故可用 service 名稱互通）
+4. 捲動至頁面最下方，點擊 **Save & test**
+5. 出現綠色 `Data source is working` 表示 Grafana 已成功連上 Prometheus
+
+### 步驟二：匯入 Node Exporter 儀表板（編號 1860）
+
+維運工程師不會從零手刻圖表，開源社群已有現成的企業級儀表板可直接匯入。
+
+1. 點擊右上角 **+** 按鈕 → 選擇 **Import dashboard**
+2. 在 **Find and import dashboards** 欄位輸入 `1860`，點擊 **Load**
+3. 在下方 **Prometheus** 下拉選單中選擇剛建立的資料源
+4. 點擊 **Import**
+
+匯入後即可看到涵蓋 CPU、記憶體、磁碟、網路的完整系統監控儀表板。
+
+---
+
 ## 執行成果
 
 ### Grafana Dashboard
@@ -392,6 +425,70 @@ Error: 'dhcpv6-client' not among existing services in zone 'public'
 
 ---
 
+### 問題七 — ab 壓測初次執行錯誤率極高
+
+**現象：** 執行 `ab -n 50000 -c 100 http://192.168.56.11/` 後，Failed requests 數量極高，幾乎全部失敗。
+
+**根本原因：** 多個服務的防火牆 port 尚未放行，導致連線被靜默丟棄；加上測試環境初次啟動後各容器狀態未確認，問題同時來自多個層面。
+
+**排查與修復流程：**
+
+**第一步：安裝 ab 工具**
+```bash
+sudo dnf install httpd-tools -y
+```
+`ab`（Apache Bench）包含在 `httpd-tools` 套件中，Rocky Linux 9 預設不含。
+
+**第二步：確認並放行 web-server port 9100**
+```bash
+ansible webservers -m firewalld \
+  -a "port=9100/tcp state=enabled permanent=yes immediate=yes" \
+  --become -i hosts
+```
+
+**第三步：確認 Docker 容器實際狀態**
+```bash
+ansible webservers -m shell -a "docker ps -a" -i hosts
+```
+確認 WordPress 與 MySQL 容器皆為 `Up` 狀態，排除容器本身異常的可能性。
+
+**第四步：放行 monitor-server 的 Grafana 與 Prometheus port**
+```bash
+# Grafana (3000)
+ansible monitoring -m shell \
+  -a "sudo firewall-cmd --permanent --add-port=3000/tcp && sudo firewall-cmd --reload" \
+  -i ansible-project/hosts
+
+# Prometheus (9090)
+ansible monitoring -m shell \
+  -a "sudo firewall-cmd --permanent --add-port=9090/tcp && sudo firewall-cmd --reload" \
+  -i ansible-project/hosts
+```
+
+**第五步：再次確認 web-server port 9100 已開放**
+```bash
+ansible webservers -m shell \
+  -a "sudo firewall-cmd --permanent --add-port=9100/tcp && sudo firewall-cmd --reload" \
+  -i ansible-project/hosts
+```
+
+**第六步：驗證防火牆規則並執行壓測**
+```bash
+# 確認 9100 已開放
+ansible webservers -m shell \
+  -a "sudo firewall-cmd --list-all" \
+  -i ansible-project/hosts
+
+# 執行壓力測試
+ab -n 6000 -c 100 http://192.168.56.11/
+```
+
+**排查後壓測結果正常，Failed requests 降至 0。**
+
+> **心得：** 防火牆規則與容器狀態是壓測前必須逐一確認的兩個檢查點。建議將上述放行步驟整合進 `deploy_firewall.yml`，避免每次重建環境後重複手動操作。
+
+---
+
 ## 專案結構
 
 ```
@@ -459,3 +556,4 @@ vagrant ssh monitor     # SSH 進入 monitor-server
 | `couldn't resolve module 'ansible.posix.firewalld'` | collection 未安裝 | 問題四 |
 | rich rule 設定後 :9100 仍無法存取 | rich rule 格式解析錯誤 | 問題五 |
 | `dhcpv6-client` 移除時報錯 | 該環境預設未開放此 service | 問題六 |
+| ab 壓測 Failed requests 極高 | 防火牆未放行 / 容器狀態未確認 | 問題七 |
