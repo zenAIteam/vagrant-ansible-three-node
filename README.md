@@ -116,7 +116,7 @@ ansible-playbook deploy_firewall.yml     # 強化各節點防火牆規則（Phas
 
 ### 步驟二：匯入 Node Exporter 儀表板（編號 1860）
 
-維運工程師不會從零手刻圖表，開源社群已有現成的企業級儀表板可直接匯入。
+維運工程師不會從零畫圖表，開源社群已有現成的企業級儀表板可直接匯入。
 
 1. 點擊右上角 **+** 按鈕 → 選擇 **Import dashboard**
 2. 在 **Find and import dashboards** 欄位輸入 `1860`，點擊 **Load**
@@ -136,7 +136,14 @@ ansible-playbook deploy_firewall.yml     # 強化各節點防火牆規則（Phas
 <!-- 請將 Grafana dashboard 截圖存為 screenshots/grafana-dashboard.png 後取消下列註解 -->
 <!-- ![Grafana Dashboard](screenshots/grafana-dashboard.png) -->
 
-### 壓力測試結果（ab -n 50000 -c 100）
+### 壓力測試結果（ab -n 6000 -c 100）
+
+> 截圖待補
+
+<!-- 請將 ab 輸出截圖存為 screenshots/ab-result.png 後取消下列註解 -->
+<!-- ![ab 壓測輸出](screenshots/ab-result.png) -->
+
+### 壓力測試結果（ab -n 8000 -c 100）
 
 > 截圖待補
 
