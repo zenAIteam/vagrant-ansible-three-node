@@ -129,26 +129,17 @@ ansible-playbook deploy_firewall.yml     # 強化各節點防火牆規則（Phas
 
 ## 執行成果
 
-### Grafana Dashboard
+### Prometheus 
 
-> 截圖待補（建議於 `vagrant up` 完成並執行壓測後擷取）
-
-<!-- 請將 Grafana dashboard 截圖存為 screenshots/grafana-dashboard.png 後取消下列註解 -->
-<!-- ![Grafana Dashboard](screenshots/grafana-dashboard.png) -->
+ ![Prometheus](prometheus-9090.png)
 
 ### 壓力測試結果（ab -n 6000 -c 100）
 
-> 截圖待補
-
-<!-- 請將 ab 輸出截圖存為 screenshots/ab-result.png 後取消下列註解 -->
-<!-- ![ab 壓測輸出](screenshots/ab-result.png) -->
+![ab-6000](node-exporter-ab-6000.png)
 
 ### 壓力測試結果（ab -n 8000 -c 100）
 
-> 截圖待補
-
-<!-- 請將 ab 輸出截圖存為 screenshots/ab-result.png 後取消下列註解 -->
-<!-- ![ab 壓測輸出](screenshots/ab-result.png) -->
+![ab-8000](node-exporter-ab-8000.png)
 
 ---
 
